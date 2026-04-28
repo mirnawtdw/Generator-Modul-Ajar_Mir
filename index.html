@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Generator RPM – Rencana Pembelajaran Mendalam</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --brand: #1d4ed8;
+    --brand-light: #eff6ff;
+    --brand-mid: #3b82f6;
+    --accent: #0ea5e9;
+    --success: #10b981;
+    --warn: #f59e0b;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --surface: #f8fafc;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--surface); color: var(--text); }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+  /* Form elements */
+  .field-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); letter-spacing: .05em; text-transform: uppercase; margin-bottom: .35rem; display: block; }
+  .field-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: .55rem .85rem; font-size: .92rem; font-family: inherit;
+    background: white; color: var(--text); transition: border .15s, box-shadow .15s;
+    outline: none;
+  }
+  .field-input:focus { border-color: var(--brand-mid); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+  .field-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.1); }
+  textarea.field-input { min-height: 90px; resize: vertical; }
+
+  /* Multi-select chips */
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: .3rem .75rem; border-radius: 99px; border: 1.5px solid var(--border);
+    font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .15s;
+    background: white; color: var(--muted); user-select: none;
+  }
+  .chip:hover { border-color: var(--brand-mid); color: var(--brand); }
+  .chip.selected { background: var(--brand); border-color: var(--brand); color: white; }
+
+  /* Section card */
+  .section-card {
+    background: white; border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.75rem; margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 1px 8px rgba(0,0,0,.03);
+  }
+  .section-title {
+    font-size: .95rem; font-weight: 800; color: var(--brand);
+    display: flex; align-items: center; gap: .5rem; margin-bottom: 1.25rem;
+    padding-bottom: .75rem; border-bottom: 1.5px solid var(--brand-light);
+  }
+  .section-title .icon { font-size: 1.1rem; }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--brand); color: white; font-weight: 700; font-size: .92rem;
+    padding: .7rem 1.5rem; border-radius: 12px; border: none; cursor: pointer;
+    transition: background .15s, transform .1s, box-shadow .15s;
+    box-shadow: 0 4px 14px rgba(29,78,216,.25);
+  }
+  .btn-primary:hover { background: #1e40af; box-shadow: 0 6px 20px rgba(29,78,216,.35); }
+  .btn-primary:active { transform: scale(.98); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: white; color: var(--brand); font-weight: 700; font-size: .88rem;
+    padding: .6rem 1.2rem; border-radius: 10px; border: 1.5px solid var(--brand);
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-secondary:hover { background: var(--brand-light); }
+  .btn-success {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--success); color: white; font-weight: 700; font-size: .88rem;
+    padding: .6rem 1.2rem; border-radius: 10px; border: none; cursor: pointer; transition: all .15s;
+  }
+  .btn-success:hover { background: #059669; }
+
+  /* Loading overlay */
+  #loading-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.65);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; backdrop-filter: blur(4px);
+  }
+  .spinner {
+    width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.2);
+    border-top-color: white; border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9998;
+    background: var(--success); color: white; padding: .85rem 1.4rem;
+    border-radius: 12px; font-weight: 600; font-size: .9rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2); transform: translateY(6rem); opacity:0;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+
+  /* RPM Output */
+  #rpm-output {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt; line-height: 1.6;
+  }
+  #rpm-output table {
+    width: 100%; border-collapse: collapse; margin-bottom: 1rem;
+  }
+  #rpm-output td, #rpm-output th {
+    border: 1px solid #374151; padding: 6px 10px;
+    vertical-align: top; text-align: justify;
+  }
+  #rpm-output th {
+    background: #1d4ed8; color: white; text-align: center;
+    font-weight: bold; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #rpm-output .sub-header td {
+    background: #dbeafe; font-weight: bold; text-align: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #rpm-output h2 {
+    font-size: 13pt; font-weight: bold; margin: 1.25rem 0 .5rem;
+    color: #1d4ed8; border-bottom: 2px solid #1d4ed8; padding-bottom: .25rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #rpm-output h3 {
+    font-size: 11pt; font-weight: bold; margin: .75rem 0 .35rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  #rpm-output .highlight { background: #fef9c3; font-weight: bold; }
+  #rpm-output ul { padding-left: 1.5rem; margin: .4rem 0; }
+  #rpm-output li { margin-bottom: .2rem; }
+  #rpm-output .footer-sign { display: flex; justify-content: space-between; margin-top: 2rem; }
+  #rpm-output .sign-block { text-align: center; min-width: 180px; }
+  #rpm-output .sign-line { border-bottom: 1px solid #374151; margin: 3rem auto .35rem; width: 160px; }
+
+  /* Scroll animation */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fadeUp .45s ease both; }
+
+  /* Sticky bar */
+  #sticky-bar {
+    position: sticky; top: 0; z-index: 100; background: rgba(248,250,252,.92);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 text-white py-8 px-6 shadow-lg">
+  <div class="max-w-5xl mx-auto flex items-center gap-5">
+    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl backdrop-blur flex-shrink-0">📚</div>
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight">Generator RPM Otomatis</h1>
+      <p class="text-blue-100 text-sm mt-0.5">Rencana Pembelajaran Mendalam — Kurikulum Merdeka 2025 · Semua Jenjang & Mapel</p>
+    </div>
+  </div>
+</header>
+
+<!-- STICKY BAR -->
+<div id="sticky-bar" class="px-6 py-3">
+  <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
+    <span class="text-sm font-semibold text-slate-500">⚡ Isi form lalu klik Generate</span>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="formHandler.scrollToForm()" class="btn-secondary text-xs py-1.5 px-3">📝 Form</button>
+      <button id="btn-generate-top" onclick="generatorRPM.generate()" class="btn-primary text-xs py-1.5 px-3">✨ Generate RPM</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="max-w-5xl mx-auto px-4 py-8 space-y-4" id="main-form">
+
+<!-- ===== SECTION A: IDENTITAS PENYUSUN ===== -->
+<div class="section-card fade-up">
+  <div class="section-title"><span class="icon">🏫</span> Identitas Penyusun & Sekolah</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="field-label">Nama Penyusun (Guru) *</label>
+      <input type="text" id="nama_guru" class="field-input" placeholder="Contoh: Siti Rahma, S.Pd."/>
+    </div>
+    <div>
+      <label class="field-label">NIP Guru</label>
+      <input type="text" id="nip_guru" class="field-input" placeholder="Contoh: 198506142010012003 (opsional)"/>
+    </div>
+    <div>
+      <label class="field-label">Nama Sekolah *</label>
+      <input type="text" id="nama_sekolah" class="field-input" placeholder="Contoh: SMA Negeri 1 Bandung"/>
+    </div>
+    <div>
+      <label class="field-label">Nama Kepala Sekolah</label>
+      <input type="text" id="nama_kepsek" class="field-input" placeholder="Contoh: Drs. Ahmad Fauzi, M.Pd."/>
+    </div>
+    <div>
+      <label class="field-label">NIP Kepala Sekolah</label>
+      <input type="text" id="nip_kepsek" class="field-input" placeholder="Opsional"/>
+    </div>
+    <div>
+      <label class="field-label">Tahun Pelajaran *</label>
+      <input type="text" id="tahun_pelajaran" class="field-input" placeholder="Contoh: 2024/2025"/>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION B: DETAIL MAPEL ===== -->
+<div class="section-card fade-up" style="animation-delay:.08s">
+  <div class="section-title"><span class="icon">📖</span> Mata Pelajaran & Kelas</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="field-label">Mata Pelajaran *</label>
+      <input type="text" id="mapel" class="field-input" placeholder="Contoh: Matematika, IPA, Bahasa Indonesia"/>
+    </div>
+    <div>
+      <label class="field-label">Jenjang *</label>
+      <select id="jenjang" class="field-input" onchange="formHandler.updateFaseKelas()">
+        <option value="">-- Pilih Jenjang --</option>
+        <option value="PAUD/TK">PAUD/TK</option>
+        <option value="SD">SD (Sekolah Dasar)</option>
+        <option value="SMP">SMP</option>
+        <option value="SMA">SMA</option>
+        <option value="SMK">SMK</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">Fase *</label>
+      <select id="fase" class="field-input">
+        <option value="">-- Pilih Jenjang dulu --</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">Kelas *</label>
+      <select id="kelas" class="field-input">
+        <option value="">-- Pilih Jenjang dulu --</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">Semester *</label>
+      <select id="semester" class="field-input">
+        <option value="">-- Pilih --</option>
+        <option value="1 (Gasal)">1 (Gasal)</option>
+        <option value="2 (Genap)">2 (Genap)</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-label">Alokasi Waktu *</label>
+      <input type="text" id="alokasi_waktu" class="field-input" placeholder="Contoh: 2 x 45 menit (1 pertemuan)"/>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION C: KURIKULUM ===== -->
+<div class="section-card fade-up" style="animation-delay:.12s">
+  <div class="section-title"><span class="icon">🎯</span> Capaian, Tujuan & Topik</div>
+  <div class="space-y-4">
+    <div>
+      <label class="field-label">Capaian Pembelajaran (CP) *</label>
+      <textarea id="cp" class="field-input" placeholder="Tuliskan Capaian Pembelajaran sesuai dokumen CP resmi Kemendikbud..."></textarea>
+    </div>
+    <div>
+      <label class="field-label">Tujuan Pembelajaran (TP) *</label>
+      <textarea id="tp" class="field-input" placeholder="Peserta didik mampu... (tuliskan tujuan spesifik, terukur, dan kontekstual)"></textarea>
+    </div>
+    <div>
+      <label class="field-label">Topik / Materi Pokok *</label>
+      <input type="text" id="topik" class="field-input" placeholder="Contoh: Sistem Persamaan Linear Dua Variabel"/>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION D: MODEL & METODE ===== -->
+<div class="section-card fade-up" style="animation-delay:.16s">
+  <div class="section-title"><span class="icon">🧩</span> Model & Metode Pembelajaran</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div>
+      <label class="field-label">Model Pembelajaran *</label>
+      <select id="model" class="field-input">
+        <option value="">-- Pilih Model --</option>
+        <option value="Project-Based Learning (PjBL)">Project-Based Learning (PjBL)</option>
+        <option value="Problem-Based Learning (PBL)">Problem-Based Learning (PBL)</option>
+        <option value="Inquiry Learning">Inquiry Learning</option>
+        <option value="Pembelajaran Kooperatif">Pembelajaran Kooperatif</option>
+        <option value="Contextual Teaching & Learning (CTL)">Contextual Teaching & Learning (CTL)</option>
+        <option value="Game-Based Learning">Game-Based Learning</option>
+        <option value="Model 5E (Engage-Explore-Explain-Elaborate-Evaluate)">Model 5E (Engage-Explore-Explain-Elaborate-Evaluate)</option>
+        <option value="lainnya">Lainnya (isi di bawah)...</option>
+      </select>
+      <input type="text" id="model_lainnya" class="field-input mt-2 hidden" placeholder="Tuliskan model pembelajaran lainnya..."/>
+    </div>
+    <div>
+      <label class="field-label">Metode Pembelajaran * <span class="normal-case font-normal">(pilih satu atau lebih)</span></label>
+      <div class="chip-group" id="metode-chips">
+        <span class="chip" data-val="Ceramah interaktif">Ceramah Interaktif</span>
+        <span class="chip" data-val="Diskusi kelompok">Diskusi Kelompok</span>
+        <span class="chip" data-val="Tanya jawab kritis">Tanya Jawab Kritis</span>
+        <span class="chip" data-val="Eksperimen">Eksperimen</span>
+        <span class="chip" data-val="Demonstrasi">Demonstrasi</span>
+        <span class="chip" data-val="Discovery learning">Discovery Learning</span>
+        <span class="chip" data-val="Studi kasus">Studi Kasus</span>
+        <span class="chip" data-val="Role play">Role Play</span>
+        <span class="chip" data-val="Mind mapping">Mind Mapping</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION E: PROFIL & TARGET ===== -->
+<div class="section-card fade-up" style="animation-delay:.2s">
+  <div class="section-title"><span class="icon">🌟</span> Dimensi Profil & Target Peserta Didik</div>
+  <div class="space-y-5">
+    <div>
+      <label class="field-label">Dimensi Profil Lulusan * <span class="normal-case font-normal">(pilih satu atau lebih)</span></label>
+      <div class="chip-group" id="dimensi-chips">
+        <span class="chip" data-val="Keimanan & Ketakwaan kepada Tuhan YME">Keimanan & Ketakwaan</span>
+        <span class="chip" data-val="Kewargaan Global">Kewargaan Global</span>
+        <span class="chip" data-val="Penalaran Kritis">Penalaran Kritis</span>
+        <span class="chip" data-val="Kreativitas">Kreativitas</span>
+        <span class="chip" data-val="Kolaborasi">Kolaborasi</span>
+        <span class="chip" data-val="Kemandirian">Kemandirian</span>
+        <span class="chip" data-val="Kesehatan Holistik">Kesehatan Holistik</span>
+        <span class="chip" data-val="Komunikasi">Komunikasi</span>
+      </div>
+    </div>
+    <div>
+      <label class="field-label">Sarana & Prasarana * <span class="normal-case font-normal">(pilih yang tersedia)</span></label>
+      <div class="chip-group" id="sarpras-chips">
+        <span class="chip" data-val="LCD Proyektor">LCD Proyektor</span>
+        <span class="chip" data-val="PID/Smart TV">PID/Smart TV</span>
+        <span class="chip" data-val="Laptop">Laptop</span>
+        <span class="chip" data-val="Chromebook">Chromebook</span>
+        <span class="chip" data-val="Gawai/Smartphone">Gawai/Smartphone</span>
+        <span class="chip" data-val="YouTube Edu">YouTube Edu</span>
+        <span class="chip" data-val="LKPD cetak">LKPD Cetak</span>
+        <span class="chip" data-val="Whiteboard">Whiteboard</span>
+        <span class="chip" data-val="Buku teks">Buku Teks</span>
+        <span class="chip" data-val="Quizizz">Quizizz</span>
+        <span class="chip" data-val="Canva Edu">Canva Edu</span>
+        <span class="chip" data-val="Google Workspace">Google Workspace</span>
+      </div>
+    </div>
+    <div>
+      <label class="field-label">Target Peserta Didik *</label>
+      <select id="target_pd" class="field-input" style="max-width:360px">
+        <option value="">-- Pilih Target --</option>
+        <option value="Reguler">Reguler (umum)</option>
+        <option value="Kesulitan Belajar">Berkebutuhan / Kesulitan Belajar</option>
+        <option value="Pencapaian Tinggi">Pencapaian Tinggi / Gifted</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GENERATE BUTTON ===== -->
+<div class="flex flex-wrap gap-3 items-center justify-center py-4">
+  <button onclick="generatorRPM.generate()" class="btn-primary text-base py-3 px-8 shadow-xl">
+    ✨ Generate RPM Sekarang
+  </button>
+  <button onclick="formHandler.resetForm()" class="btn-secondary">🔄 Reset Form</button>
+</div>
+
+</main>
+
+<!-- ===== OUTPUT AREA ===== -->
+<div id="output-area" class="hidden max-w-5xl mx-auto px-4 pb-12">
+
+  <!-- Action bar -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-green-400 inline-block"></span>
+      <span class="font-bold text-slate-700 text-sm">RPM Berhasil Dibuat!</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="exportHandler.copyAndOpenDocs()" class="btn-primary text-xs py-2 px-4">
+        📋 Copy & Buka Google Docs
+      </button>
+      <button onclick="exportHandler.exportWord()" class="btn-secondary text-xs py-2 px-4">
+        📄 Export Word (.doc)
+      </button>
+      <button onclick="generatorRPM.generate()" class="btn-secondary text-xs py-2 px-4">
+        🔄 Generate Ulang
+      </button>
+      <button onclick="formHandler.scrollToForm()" class="btn-secondary text-xs py-2 px-4">
+        📝 Edit Form
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview container -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div class="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center gap-2">
+      <span class="text-slate-500 text-sm font-semibold">📄 Preview RPM</span>
+    </div>
+    <iframe id="rpm-frame" style="width:100%;min-height:600px;border:none;" sandbox="allow-same-origin"></iframe>
+  </div>
+
+  <!-- Bottom action bar -->
+  <div class="flex flex-wrap gap-3 justify-center mt-5">
+    <button onclick="exportHandler.copyAndOpenDocs()" class="btn-primary">📋 Copy & Buka Google Docs</button>
+    <button onclick="exportHandler.exportWord()" class="btn-success">📄 Export Word (.doc)</button>
+    <button onclick="generatorRPM.generate()" class="btn-secondary">🔄 Generate Ulang</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">✅ Berhasil!</div>
+
+<script>
+// ============================================================
+// MODULE: formHandler
+// ============================================================
+const formHandler = {
+  faseKelasMap: {
+    'PAUD/TK': { fases: ['Fase Fondasi'], kelas: ['Kelompok A (4-5 tahun)', 'Kelompok B (5-6 tahun)'] },
+    'SD': {
+      fases: ['Fase A', 'Fase B', 'Fase C'],
+      kelas: ['Kelas 1', 'Kelas 2', 'Kelas 3', 'Kelas 4', 'Kelas 5', 'Kelas 6']
+    },
+    'SMP': { fases: ['Fase D'], kelas: ['Kelas 7', 'Kelas 8', 'Kelas 9'] },
+    'SMA': { fases: ['Fase E', 'Fase F'], kelas: ['Kelas 10', 'Kelas 11', 'Kelas 12'] },
+    'SMK': { fases: ['Fase E', 'Fase F'], kelas: ['Kelas 10', 'Kelas 11', 'Kelas 12'] }
+  },
+
+  updateFaseKelas() {
+    const jenjang = document.getElementById('jenjang').value;
+    const faseEl = document.getElementById('fase');
+    const kelasEl = document.getElementById('kelas');
+    const map = this.faseKelasMap[jenjang];
+    if (!map) {
+      faseEl.innerHTML = '<option value="">-- Pilih Jenjang dulu --</option>';
+      kelasEl.innerHTML = '<option value="">-- Pilih Jenjang dulu --</option>';
+      return;
+    }
+    faseEl.innerHTML = '<option value="">-- Pilih Fase --</option>' +
+      map.fases.map(f => `<option value="${f}">${f}</option>`).join('');
+    kelasEl.innerHTML = '<option value="">-- Pilih Kelas --</option>' +
+      map.kelas.map(k => `<option value="${k}">${k}</option>`).join('');
+  },
+
+  getChipValues(containerId) {
+    return [...document.querySelectorAll(`#${containerId} .chip.selected`)].map(c => c.dataset.val);
+  },
+
+  validate() {
+    const required = ['nama_guru','nama_sekolah','tahun_pelajaran','mapel','jenjang','fase','kelas','semester','alokasi_waktu','cp','tp','topik','model','target_pd'];
+    let valid = true;
+    // Clear errors
+    document.querySelectorAll('.field-input').forEach(el => el.classList.remove('error'));
+
+    required.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el || !el.value.trim()) {
+        if (el) el.classList.add('error');
+        valid = false;
+      }
+    });
+    // model lainnya
+    const model = document.getElementById('model').value;
+    if (model === 'lainnya' && !document.getElementById('model_lainnya').value.trim()) {
+      document.getElementById('model_lainnya').classList.add('error');
+      valid = false;
+    }
+    // chips
+    if (this.getChipValues('metode-chips').length === 0) valid = false;
+    if (this.getChipValues('dimensi-chips').length === 0) valid = false;
+    if (this.getChipValues('sarpras-chips').length === 0) valid = false;
+
+    if (!valid) {
+      this.toast('⚠️ Mohon lengkapi semua field yang wajib diisi!', '#f59e0b');
+      document.querySelector('.field-input.error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return valid;
+  },
+
+  getData() {
+    const model = document.getElementById('model').value;
+    return {
+      nama_guru: document.getElementById('nama_guru').value.trim(),
+      nip_guru: document.getElementById('nip_guru').value.trim(),
+      nama_sekolah: document.getElementById('nama_sekolah').value.trim(),
+      nama_kepsek: document.getElementById('nama_kepsek').value.trim() || '…………………………',
+      nip_kepsek: document.getElementById('nip_kepsek').value.trim() || '…………………………',
+      tahun_pelajaran: document.getElementById('tahun_pelajaran').value.trim(),
+      mapel: document.getElementById('mapel').value.trim(),
+      jenjang: document.getElementById('jenjang').value,
+      fase: document.getElementById('fase').value,
+      kelas: document.getElementById('kelas').value,
+      semester: document.getElementById('semester').value,
+      alokasi_waktu: document.getElementById('alokasi_waktu').value.trim(),
+      cp: document.getElementById('cp').value.trim(),
+      tp: document.getElementById('tp').value.trim(),
+      topik: document.getElementById('topik').value.trim(),
+      model: model === 'lainnya' ? document.getElementById('model_lainnya').value.trim() : model,
+      metode: this.getChipValues('metode-chips'),
+      dimensi: this.getChipValues('dimensi-chips'),
+      sarpras: this.getChipValues('sarpras-chips'),
+      target_pd: document.getElementById('target_pd').value
+    };
+  },
+
+  scrollToForm() {
+    document.getElementById('main-form').scrollIntoView({ behavior: 'smooth' });
+  },
+
+  resetForm() {
+    if (!confirm('Reset semua isian form? Hasil RPM akan hilang.')) return;
+    document.querySelectorAll('.field-input').forEach(el => {
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+      el.classList.remove('error');
+    });
+    document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+    document.getElementById('output-area').classList.add('hidden');
+    document.getElementById('model_lainnya').classList.add('hidden');
+    this.updateFaseKelas();
+  },
+
+  toast(msg, color = '#10b981') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = color;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+};
+
+// Chip toggle init
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => chip.classList.toggle('selected'));
+});
+
+// Model lainnya toggle
+document.getElementById('model').addEventListener('change', function() {
+  document.getElementById('model_lainnya').classList.toggle('hidden', this.value !== 'lainnya');
+});
+
+// ============================================================
+// MODULE: generatorRPM
+// ============================================================
+const generatorRPM = {
+  generate() {
+    if (!formHandler.validate()) return;
+    const d = formHandler.getData();
+    try {
+      const html = this.buildRPM(d);
+      this._lastHTML = html;
+
+      // Render via iframe agar tidak freeze halaman utama
+      const frame = document.getElementById('rpm-frame');
+      const fullDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        + 'body{font-family:Times New Roman,serif;font-size:11pt;line-height:1.6;margin:1.5rem;}'
+        + 'table{width:100%;border-collapse:collapse;margin-bottom:1rem;}'
+        + 'td,th{border:1px solid #374151;padding:6px 10px;vertical-align:top;text-align:justify;}'
+        + 'th{background:#1d4ed8;color:white;text-align:center;font-weight:bold;}'
+        + '.sub-header td{background:#dbeafe;font-weight:bold;text-align:center;}'
+        + 'h1{font-size:15pt;font-weight:bold;text-align:center;color:#1d4ed8;}'
+        + 'h2{font-size:12pt;font-weight:bold;color:#1d4ed8;border-bottom:2px solid #1d4ed8;padding-bottom:.2rem;margin-top:1.2rem;}'
+        + 'h3{font-size:11pt;font-weight:bold;margin:.8rem 0 .3rem;}'
+        + 'ul{padding-left:1.4rem;margin:.3rem 0;}li{margin-bottom:.2rem;}'
+        + 'ol{padding-left:1.4rem;}'
+        + '</style></head><body>' + html + '</body></html>';
+      frame.srcdoc = fullDoc;
+
+      document.getElementById('output-area').classList.remove('hidden');
+      formHandler.toast('✅ RPM berhasil dibuat! Silakan preview dan export.');
+      document.getElementById('output-area').scrollIntoView({ behavior: 'smooth' });
+    } catch(e) {
+      formHandler.toast('❌ Gagal membuat RPM: ' + e.message, '#ef4444');
+    }
+  },
+
+  // ── CONTEXT-AWARE CONTENT GENERATORS ──────────────────────
+  getProfilPD(d) {
+    const profiles = {
+      'Reguler': `Peserta didik pada kelas ini memiliki keberagaman kemampuan dan latar belakang yang khas. Secara umum mereka berada pada rentang kemampuan rata-rata, dengan sebagian kecil menunjukkan prestasi di atas rata-rata dan sebagian lainnya memerlukan dukungan tambahan. Mereka tumbuh dalam lingkungan digital yang kaya stimulasi namun masih memerlukan bimbingan dalam mengembangkan kemampuan berpikir tingkat tinggi dan kecakapan hidup.`,
+      'Kesulitan Belajar': `Peserta didik pada kelas ini teridentifikasi mengalami hambatan belajar tertentu, baik berupa kesulitan memproses informasi, keterbatasan perhatian, maupun hambatan dalam ekspresi verbal dan tulisan. Mereka memerlukan pendekatan pembelajaran yang terdiferensiasi, scaffolding yang kuat, serta asesmen yang fleksibel dan tidak menghakimi.`,
+      'Pencapaian Tinggi': `Peserta didik pada kelas ini menunjukkan kemampuan kognitif dan motivasi belajar yang berada jauh di atas rata-rata. Mereka memiliki rasa ingin tahu yang tinggi, cepat memahami konsep baru, dan membutuhkan tantangan intelektual yang mendalam. Kurikulum perlu diperkaya (enrichment) dan dipercepat (acceleration) agar potensi mereka dapat berkembang secara optimal.`
+    };
+    return profiles[d.target_pd] || profiles['Reguler'];
+  },
+
+  getLintas(d) {
+    const lintasMap = {
+      'Matematika': 'Fisika (pengukuran dan besaran), Ekonomi (penerapan fungsi linear dalam konteks bisnis), Informatika (algoritma dan komputasi)',
+      'IPA': 'Matematika (perhitungan kuantitatif), Bahasa Indonesia (penulisan laporan ilmiah), Teknologi (penerapan sains dalam kehidupan)',
+      'Bahasa Indonesia': 'Seni Budaya (estetika bahasa), IPS (konteks sosial-historis teks), PPKn (nilai kebangsaan dalam sastra)',
+      'IPS': 'Geografi (ruang dan waktu), Ekonomi (sistem produksi dan distribusi), PPKn (demokrasi dan tata negara)',
+      'PPKn': 'IPS (sejarah kebangsaan), Bahasa Indonesia (analisis wacana hukum), Sosiologi (dinamika masyarakat)',
+      'Sejarah': 'Geografi (ruang peristiwa sejarah), Bahasa Indonesia (analisis sumber sejarah), Sosiologi (dampak sosial peristiwa)',
+      'Geografi': 'IPA (fenomena alam), IPS (hubungan manusia-ruang), Matematika (peta skala dan koordinat)',
+      'Fisika': 'Matematika (pemodelan kuantitatif), Kimia (reaksi dan energi), Teknologi (rekayasa dan desain)',
+      'Kimia': 'Fisika (energi dan keseimbangan), Biologi (metabolisme sel), Matematika (stoikiometri)',
+      'Biologi': 'Kimia (metabolisme biokimia), Fisika (bioakustik dan biofisika), Kesehatan (anatomi fisiologi)',
+      'Ekonomi': 'Matematika (fungsi dan statistik), IPS (struktur sosial dan produksi), PPKn (kebijakan publik)'
+    };
+    for (const [key, val] of Object.entries(lintasMap)) {
+      if (d.mapel.toLowerCase().includes(key.toLowerCase())) return val;
+    }
+    return 'Bahasa Indonesia (komunikasi ilmiah), Matematika (penalaran logis), Informatika (literasi digital dan presentasi data)';
+  },
+
+  getPedagogis(model) {
+    const map = {
+      'Project-Based Learning (PjBL)': 'Pembelajaran dirancang berbasis proyek nyata yang bermakna. Guru berperan sebagai fasilitator dan mentor, mendorong peserta didik bekerja secara kolaboratif dalam tim untuk menghasilkan produk atau solusi konkret dari permasalahan autentik.',
+      'Problem-Based Learning (PBL)': 'Pembelajaran diawali dari permasalahan kontekstual yang menantang. Peserta didik didorong untuk menganalisis masalah secara sistematis, mencari informasi secara mandiri, dan merumuskan solusi berbasis bukti dan data.',
+      'Inquiry Learning': 'Peserta didik ditempatkan sebagai ilmuwan muda yang aktif mengajukan pertanyaan, merancang investigasi, mengumpulkan data, dan menarik kesimpulan secara mandiri dan kritis.',
+      'Pembelajaran Kooperatif': 'Interaksi positif antar peserta didik dibangun melalui struktur kelompok yang saling bergantung (positive interdependence). Setiap anggota memiliki peran dan tanggung jawab yang jelas dalam mencapai tujuan bersama.',
+      'Contextual Teaching & Learning (CTL)': 'Materi dikaitkan langsung dengan pengalaman nyata peserta didik dalam kehidupan sehari-hari. Pembelajaran menekankan relevansi, aplikasi, dan pemaknaan konsep dalam konteks autentik.',
+      'Game-Based Learning': 'Elemen permainan (poin, level, tantangan, reward) diintegrasikan ke dalam pembelajaran untuk meningkatkan motivasi intrinsik, keterlibatan, dan pengulangan materi secara menyenangkan.',
+      'Model 5E (Engage-Explore-Explain-Elaborate-Evaluate)': 'Pembelajaran disusun dalam 5 fase siklus konstruktivistik: Engage (membangkitkan rasa ingin tahu), Explore (investigasi mandiri), Explain (konseptualisasi), Elaborate (pendalaman dan transfer), Evaluate (refleksi dan penilaian).'
+    };
+    return map[model] || 'Guru menerapkan praktik pedagogis yang berpusat pada peserta didik, mendorong keterlibatan aktif, berpikir kritis, dan pembelajaran bermakna melalui pengalaman langsung dan refleksi terstruktur.';
+  },
+
+  getToolsDigital(sarpras) {
+    const tools = [];
+    if (sarpras.includes('Quizizz')) tools.push('Quizizz (kuis interaktif formatif real-time)');
+    if (sarpras.includes('Canva Edu')) tools.push('Canva for Education (desain visual dan presentasi kreatif)');
+    if (sarpras.includes('YouTube Edu')) tools.push('YouTube Edu (video pembelajaran kontekstual)');
+    if (sarpras.includes('Google Workspace')) tools.push('Google Docs & Slides (kolaborasi dokumen)');
+    if (sarpras.includes('Gawai/Smartphone')) tools.push('Padlet / Mentimeter (ekspresi ide digital)');
+    if (sarpras.includes('Laptop') || sarpras.includes('Chromebook')) tools.push('Jamboard / Miro (peta pikiran kolaboratif digital)');
+    if (tools.length === 0) tools.push('Presentasi PowerPoint/Google Slides', 'Video pembelajaran dari YouTube Edu');
+    return tools.join(', ');
+  },
+
+  getDimensiDeskripsi(dimensi) {
+    const map = {
+      'Penalaran Kritis': 'Peserta didik dilatih untuk menganalisis informasi, mengevaluasi argumen, dan menarik kesimpulan berbasis bukti secara logis dan sistematis.',
+      'Kreativitas': 'Peserta didik didorong untuk menghasilkan ide-ide orisinal, mengeksplorasi alternatif solusi, dan mengekspresikan pemahaman dalam bentuk yang inovatif.',
+      'Kolaborasi': 'Peserta didik belajar bekerja secara sinergis dalam tim lintas kemampuan, saling menghargai kontribusi, dan membangun pemahaman bersama.',
+      'Kemandirian': 'Peserta didik mengembangkan kemampuan mengatur diri, merencanakan strategi belajar, dan menyelesaikan tugas tanpa ketergantungan berlebihan pada orang lain.',
+      'Keimanan & Ketakwaan kepada Tuhan YME': 'Nilai-nilai spiritual dan moral diintegrasikan melalui refleksi makna ilmu dalam kehidupan dan praktik ibadah yang konsisten.',
+      'Kewargaan Global': 'Peserta didik membangun kesadaran akan identitas lokal sekaligus tanggung jawab sebagai warga global yang peduli terhadap isu-isu kemanusiaan dan lingkungan.',
+      'Kesehatan Holistik': 'Dimensi fisik, mental, dan sosial diperhatikan secara seimbang melalui aktivitas yang menjaga kebugaran dan kesejahteraan emosional peserta didik.',
+      'Komunikasi': 'Peserta didik mengembangkan kemampuan menyampaikan ide secara lisan dan tulisan dengan jelas, efektif, dan penuh percaya diri dalam berbagai konteks.'
+    };
+    return dimensi.map(d => `<tr><td width="30%"><b>${d}</b></td><td>${map[d] || 'Dikembangkan melalui aktivitas pembelajaran yang kontekstual dan bermakna.'}</td></tr>`).join('');
+  },
+
+  getIceBraking(jenjang) {
+    const map = {
+      'PAUD/TK': 'Guru mengajak peserta didik bermain "Tepuk Semangat" dan bernyanyi lagu anak bertema topik yang akan dipelajari bersama.',
+      'SD': 'Guru memimpin ice breaking "Gerak dan Lagu" atau permainan konsentrasi singkat untuk membangkitkan energi dan fokus belajar.',
+      'SMP': 'Guru mengajak peserta didik melakukan "Two Truths and a Lie" atau kuis singkat 3 pertanyaan menggunakan Quizizz untuk mengecek pengetahuan awal.',
+      'SMA': 'Guru mengajak peserta didik berbagi pendapat cepat melalui Mentimeter atau sticky note digital tentang isu kontekstual yang berkaitan dengan topik.',
+      'SMK': 'Guru membuka dengan simulasi kasus industri singkat atau video inspirasi 2 menit yang relevan dengan bidang keahlian dan topik yang akan dipelajari.'
+    };
+    return map[jenjang] || map['SMP'];
+  },
+
+  getHOTS(topik, mapel) {
+    return [
+      `Mengapa pemahaman mendalam tentang "${topik}" sangat penting dalam kehidupan nyata Anda sehari-hari?`,
+      `Apa yang akan terjadi jika konsep "${topik}" tidak dipahami dengan benar oleh masyarakat luas?`,
+      `Bagaimana Anda akan menggunakan pengetahuan tentang "${topik}" untuk memecahkan masalah nyata di lingkungan sekitar Anda?`
+    ];
+  },
+
+  getKSE(jenjang) {
+    const map = {
+      'PAUD/TK': 'Guru mengajak anak-anak menyebutkan perasaan hari ini dengan kartu emosi bergambar (senang, sedih, bersemangat) dan berlatih menarik napas dalam bersama.',
+      'SD': 'Guru mengajak peserta didik melakukan "Check-In Emosi" dengan memilih emoji perasaan, dilanjutkan latihan pernapasan 4-4-4 (tarik-tahan-buang) selama 1 menit.',
+      'SMP': 'Peserta didik mengisi refleksi singkat di sticky note digital: "Satu hal yang saya syukuri hari ini" dan "Satu hal yang saya harapkan dari pembelajaran ini."',
+      'SMA': 'Guru memfasilitasi refleksi kesadaran diri: peserta didik menuliskan satu tantangan yang sedang dihadapi dan satu kekuatan diri yang akan membantu mengatasinya.',
+      'SMK': 'Peserta didik melakukan "strength check": mengidentifikasi kompetensi keahlian yang sudah dimiliki dan menetapkan satu target pengembangan diri dalam pertemuan ini.'
+    };
+    return map[jenjang] || map['SMP'];
+  },
+
+  buildRPM(d) {
+    const today = new Date();
+    const tgl = today.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+    const hotsQ = this.getHOTS(d.topik, d.mapel);
+    const lintas = this.getLintas(d);
+    const pedagogis = this.getPedagogis(d.model);
+    const tools = this.getToolsDigital(d.sarpras);
+    const iceBreaking = this.getIceBraking(d.jenjang);
+    const kse = this.getKSE(d.jenjang);
+
+    return `
+<div style="text-align:center; margin-bottom:1rem;">
+  <h1 style="font-size:15pt; font-weight:bold; font-family:'Plus Jakarta Sans',sans-serif; color:#1d4ed8; margin:0;">
+    RENCANA PEMBELAJARAN MENDALAM (RPM)
+  </h1>
+  <h2 style="font-size:12pt; font-weight:bold; font-family:'Plus Jakarta Sans',sans-serif; color:#374151; margin:.25rem 0 0; border:none; padding:0;">
+    KURIKULUM MERDEKA 2025
+  </h2>
+  <p style="color:#6b7280; font-size:10pt; margin:.25rem 0 0;">${d.nama_sekolah}</p>
+</div>
+
+<!-- ======================================== A. INFORMASI UMUM -->
+<h2>A. INFORMASI UMUM</h2>
+<table>
+  <tr><td width="25%"><b>Nama Penyusun</b></td><td width="25%">${d.nama_guru}</td><td width="25%"><b>Mata Pelajaran</b></td><td>${d.mapel}</td></tr>
+  <tr><td><b>Nama Sekolah</b></td><td>${d.nama_sekolah}</td><td><b>Jenjang / Fase</b></td><td>${d.jenjang} / ${d.fase}</td></tr>
+  <tr><td><b>Tahun Pelajaran</b></td><td>${d.tahun_pelajaran}</td><td><b>Kelas</b></td><td>${d.kelas}</td></tr>
+  <tr><td><b>Semester</b></td><td>${d.semester}</td><td><b>Alokasi Waktu</b></td><td>${d.alokasi_waktu}</td></tr>
+  <tr><td><b>Topik / Materi Pokok</b></td><td colspan="3">${d.topik}</td></tr>
+  <tr><td><b>Model Pembelajaran</b></td><td colspan="3">${d.model}</td></tr>
+  <tr><td><b>Metode Pembelajaran</b></td><td colspan="3">${d.metode.join(', ')}</td></tr>
+  <tr><td><b>Sarana &amp; Prasarana</b></td><td colspan="3">${d.sarpras.join(', ')}</td></tr>
+  <tr><td><b>Target Peserta Didik</b></td><td colspan="3">${d.target_pd}</td></tr>
+  <tr><td><b>Tanggal Penyusunan</b></td><td colspan="3">${tgl}</td></tr>
+</table>
+
+<!-- ======================================== B. IDENTIFIKASI -->
+<h2>B. IDENTIFIKASI KEBUTUHAN PEMBELAJARAN</h2>
+
+<h3>B.1 Capaian Pembelajaran (CP)</h3>
+<table><tr><td>${d.cp}</td></tr></table>
+
+<h3>B.2 Tujuan Pembelajaran (TP)</h3>
+<table><tr><td>${d.tp}</td></tr></table>
+
+<h3>B.3 Profil Peserta Didik</h3>
+<table><tr><td>${this.getProfilPD(d)}</td></tr></table>
+
+<h3>B.4 Identifikasi Materi (4 Jenis Pengetahuan)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Jenis Pengetahuan</td></tr>
+  <tr><td width="30%"><b>Faktual</b></td><td>Fakta-fakta konkret, istilah, simbol, dan data empiris yang berkaitan langsung dengan "${d.topik}" dalam konteks ${d.mapel}.</td></tr>
+  <tr><td><b>Konseptual</b></td><td>Konsep, definisi, prinsip, teori, dan klasifikasi yang membentuk kerangka pemahaman tentang "${d.topik}" secara sistematis dan terstruktur.</td></tr>
+  <tr><td><b>Prosedural</b></td><td>Langkah-langkah, prosedur, teknik, dan metode yang diperlukan untuk menerapkan dan menyelesaikan permasalahan terkait "${d.topik}".</td></tr>
+  <tr><td><b>Metakognitif</b></td><td>Kesadaran peserta didik terhadap proses berpikir sendiri: strategi belajar yang efektif, monitoring pemahaman, dan evaluasi diri terhadap penguasaan "${d.topik}".</td></tr>
+</table>
+
+<h3>B.5 Dimensi Profil Lulusan yang Dikembangkan</h3>
+<table>
+  <tr class="sub-header"><td>Dimensi</td><td>Deskripsi Kontekstual</td></tr>
+  ${this.getDimensiDeskripsi(d.dimensi)}
+</table>
+
+<!-- ======================================== C. DESAIN PEMBELAJARAN -->
+<h2>C. DESAIN PEMBELAJARAN</h2>
+<table>
+  <tr><td width="30%"><b>Lintas Disiplin Ilmu</b></td><td>${lintas}</td></tr>
+  <tr><td><b>Praktik Pedagogis</b></td><td>${pedagogis}</td></tr>
+  <tr><td><b>Tools Digital yang Digunakan</b></td><td>${tools}</td></tr>
+  <tr><td><b>Pendekatan Diferensiasi</b></td><td>Diferensiasi konten (tingkat kompleksitas berbeda), proses (scaffolding bertahap), dan produk (pilihan bentuk unjuk kerja) untuk mengakomodasi keberagaman peserta didik.</td></tr>
+  <tr><td><b>Integrasi Nilai Karakter</b></td><td>Nilai kejujuran, tanggung jawab, kolaborasi, dan rasa ingin tahu diintegrasikan secara eksplisit melalui norma kelas, aturan diskusi, dan refleksi pembelajaran.</td></tr>
+</table>
+
+<!-- ======================================== D. PETA PENGALAMAN -->
+<h2>D. PETA PENGALAMAN BELAJAR</h2>
+<table>
+  <tr>
+    <th>Mengalami</th>
+    <th>Bertanya</th>
+    <th>Eksplorasi</th>
+    <th>Refleksi</th>
+    <th>Aksi</th>
+  </tr>
+  <tr>
+    <td>Peserta didik mengamati fenomena nyata atau studi kasus yang berkaitan dengan "${d.topik}" melalui media visual atau manipulatif konkret.</td>
+    <td>Peserta didik merumuskan pertanyaan-pertanyaan kritis dan terbuka tentang apa yang diamati, dipandu oleh guru dengan teknik questioning bertingkat.</td>
+    <td>Peserta didik melakukan investigasi, diskusi kelompok, dan analisis data untuk menemukan pola, konsep, atau jawaban atas pertanyaan yang dirumuskan.</td>
+    <td>Peserta didik merefleksikan proses berpikir dan penemuan mereka: apa yang dipelajari, apa yang masih membingungkan, dan bagaimana pengetahuan baru terhubung dengan yang sudah ada.</td>
+    <td>Peserta didik menerapkan pemahaman yang diperoleh untuk menyelesaikan masalah nyata, membuat produk, atau merancang solusi kontekstual yang berdampak.</td>
+  </tr>
+</table>
+
+<!-- ======================================== E. LANGKAH PEMBELAJARAN -->
+<h2>E. LANGKAH-LANGKAH PEMBELAJARAN</h2>
+
+<h3>🔵 PENDAHULUAN (±15 menit)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Aktivitas Pendahuluan</td></tr>
+  <tr>
+    <td width="35%"><b>1. Pembukaan &amp; Administrasi Kelas</b></td>
+    <td>Guru membuka pembelajaran dengan salam hangat dan semangat, dilanjutkan dengan berdoa bersama dipimpin oleh ketua kelas. Guru melakukan presensi kehadiran dan mengecek kesiapan belajar peserta didik. Kelas dikondisikan agar nyaman, tertib, dan kondusif untuk pembelajaran yang bermakna.</td>
+  </tr>
+  <tr>
+    <td><b>2. Kompetensi Sosial Emosional (KSE)</b></td>
+    <td>${kse}</td>
+  </tr>
+  <tr>
+    <td><b>3. Ice Breaking / Warming Up</b></td>
+    <td>${iceBreaking}</td>
+  </tr>
+  <tr>
+    <td><b>4. Apersepsi &amp; Motivasi</b></td>
+    <td>Guru mengaitkan materi pembelajaran dengan pengetahuan yang telah dimiliki peserta didik melalui tanya jawab singkat. Guru menampilkan fenomena, gambar, atau video pendek (2-3 menit) yang memancing rasa ingin tahu tentang "${d.topik}". Guru menyampaikan tujuan pembelajaran dan manfaat nyata dari memahami topik ini dalam kehidupan peserta didik.</td>
+  </tr>
+  <tr>
+    <td><b>5. Pertanyaan Pemantik HOTS</b></td>
+    <td>
+      Guru mengajukan pertanyaan-pertanyaan terbuka berikut untuk merangsang berpikir kritis:
+      <ul>
+        <li>${hotsQ[0]}</li>
+        <li>${hotsQ[1]}</li>
+        <li>${hotsQ[2]}</li>
+      </ul>
+      Peserta didik diberi waktu 3-5 menit untuk berpikir mandiri sebelum berbagi dalam diskusi kelas.
+    </td>
+  </tr>
+</table>
+
+<h3>🟡 KEGIATAN INTI (±60 menit)</h3>
+
+<h3>Tahap 1: Memahami — Konstruksi Pengetahuan (±20 menit)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Aktivitas Memahami</td></tr>
+  <tr>
+    <td width="35%"><b>Penyajian Masalah / Tantangan</b></td>
+    <td>Guru menyajikan masalah kontekstual yang autentik berkaitan dengan "${d.topik}". Permasalahan dirancang agar memiliki relevansi nyata dengan kehidupan peserta didik sehingga menciptakan kebutuhan intrinsik untuk belajar. Guru menggunakan ${d.sarpras.slice(0,2).join(' dan ')} sebagai media penyajian yang menarik dan interaktif.</td>
+  </tr>
+  <tr>
+    <td><b>Pembentukan Kelompok</b></td>
+    <td>Peserta didik dibagi ke dalam kelompok heterogen (4-5 orang per kelompok) dengan mempertimbangkan keberagaman kemampuan, gender, dan latar belakang. Setiap kelompok menentukan peran: ketua diskusi, notulen, presentator, dan moderator secara bergantian.</td>
+  </tr>
+  <tr>
+    <td><b>Eksplorasi Awal</b></td>
+    <td>Masing-masing kelompok berdiskusi menggunakan sumber belajar yang disediakan (buku teks, LKPD, dan sumber digital). Guru memfasilitasi dengan pertanyaan-pertanyaan pengiring yang memandu pendalaman pemahaman tanpa memberikan jawaban langsung. Peserta didik mencatat temuan awal dan pertanyaan yang muncul selama eksplorasi.</td>
+  </tr>
+</table>
+
+<h3>Tahap 2: Mengaplikasi — Transfer &amp; Penerapan (±25 menit)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Aktivitas Mengaplikasi</td></tr>
+  <tr>
+    <td width="35%"><b>Aktivitas Kolaboratif</b></td>
+    <td>Setiap kelompok mengerjakan tugas utama yang dirancang berdasarkan model ${d.model}. Tugas mencakup analisis data, pemecahan masalah, atau perancangan solusi yang mengintegrasikan konsep "${d.topik}" dengan konteks nyata. Peserta didik menggunakan ${tools} untuk mempresentasikan hasil kerja kelompok secara kreatif dan kolaboratif.</td>
+  </tr>
+  <tr>
+    <td><b>Pendalaman HOTS</b></td>
+    <td>Guru memberikan pertanyaan analitis dan evaluatif kepada kelompok yang sudah menyelesaikan tugas utama, mendorong mereka untuk mempertimbangkan sudut pandang alternatif, mengkritisi asumsi, dan menyajikan bukti-bukti yang mendukung argumentasi mereka. Teknik "Socratic Questioning" diterapkan untuk menggali pemahaman yang lebih dalam.</td>
+  </tr>
+  <tr>
+    <td><b>Presentasi &amp; Diskusi</b></td>
+    <td>Perwakilan kelompok mempresentasikan hasil kerja kelompok (maks. 5 menit per kelompok). Kelompok lain memberikan tanggapan konstruktif menggunakan protokol "TAG: Tell something good, Ask a question, Give a suggestion." Guru memfasilitasi diskusi antar kelompok dan memberikan penguatan konsep yang akurat.</td>
+  </tr>
+</table>
+
+<h3>Tahap 3: Merefleksi — Konsolidasi &amp; Metakognisi (±15 menit)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Aktivitas Merefleksi</td></tr>
+  <tr>
+    <td width="35%"><b>Konsolidasi Konsep</b></td>
+    <td>Guru bersama peserta didik menyusun peta konsep bersama (collaborative concept map) di papan tulis atau menggunakan alat digital, merangkum poin-poin kunci dari "${d.topik}" yang telah dipelajari. Setiap peserta didik melengkapi peta konsep pribadi di buku catatan mereka.</td>
+  </tr>
+  <tr>
+    <td><b>Metakognisi Individu</b></td>
+    <td>Peserta didik mengisi "Kartu Metakognisi" secara individual: (1) Apa yang saya pahami dengan sangat baik hari ini? (2) Apa yang masih membingungkan atau perlu dipelajari lebih lanjut? (3) Bagaimana saya akan menggunakan pengetahuan ini? Guru mengumpulkan kartu sebagai bahan asesmen formatif dan perencanaan pembelajaran berikutnya.</td>
+  </tr>
+</table>
+
+<h3>🔴 PENUTUP (±15 menit)</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">Aktivitas Penutup</td></tr>
+  <tr>
+    <td width="35%"><b>Refleksi Mendalam</b></td>
+    <td>Guru memandu refleksi struktural menggunakan protokol "3-2-1": 3 hal yang dipelajari, 2 hal yang menarik, 1 pertanyaan yang masih ingin dijawab. Beberapa peserta didik berbagi refleksi secara sukarela. Guru memberikan umpan balik positif dan konstruktif terhadap proses pembelajaran yang berlangsung.</td>
+  </tr>
+  <tr>
+    <td><b>Umpan Balik &amp; Penghargaan</b></td>
+    <td>Guru memberikan apresiasi verbal dan konkret terhadap kelompok yang menunjukkan kerja sama terbaik, pertanyaan paling kritis, dan presentasi paling kreatif. Guru menyampaikan umpan balik keseluruhan tentang kualitas diskusi dan produk yang dihasilkan hari ini.</td>
+  </tr>
+  <tr>
+    <td><b>Rencana Tindak Lanjut</b></td>
+    <td>Guru menyampaikan tugas lanjutan yang relevan dan bermakna (bukan sekadar PR mekanis) serta memberikan gambaran tentang topik atau tantangan yang akan dihadapi pada pertemuan berikutnya. Peserta didik diinformasikan tentang bagaimana mereka dapat mempersiapkan diri secara mandiri.</td>
+  </tr>
+  <tr>
+    <td><b>Doa &amp; Penutup</b></td>
+    <td>Pembelajaran ditutup dengan doa bersama sesuai keyakinan masing-masing, dipimpin oleh peserta didik secara bergantian. Guru mengucapkan salam penutup dan memberikan motivasi singkat untuk tetap semangat belajar di luar kelas.</td>
+  </tr>
+</table>
+
+<!-- ======================================== F. ASESMEN -->
+<h2>F. ASESMEN PEMBELAJARAN</h2>
+
+<h3>F.1 Asesmen Diagnostik Kognitif</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">3 Soal Diagnostik Awal</td></tr>
+  <tr><td width="8%"><b>1.</b></td><td>Apa yang Anda ketahui tentang "${d.topik}"? Tuliskan pemahaman Anda sendiri dengan kata-kata sederhana tanpa melihat sumber apa pun.</td></tr>
+  <tr><td><b>2.</b></td><td>Pernahkah Anda menemukan "${d.topik}" dalam kehidupan sehari-hari? Berikan satu contoh nyata dan jelaskan bagaimana hubungannya.</td></tr>
+  <tr><td><b>3.</b></td><td>Jika Anda harus menjelaskan konsep dasar "${d.topik}" kepada teman yang belum pernah mempelajarinya, apa tiga poin terpenting yang akan Anda sampaikan?</td></tr>
+</table>
+
+<h3>F.2 Asesmen Formatif</h3>
+<table>
+  <tr class="sub-header"><td>Jenis</td><td>Instrumen</td><td>Aspek yang Dinilai</td><td>Waktu Pelaksanaan</td></tr>
+  <tr>
+    <td><b>Observasi Proses</b></td>
+    <td>Lembar observasi terstruktur dengan checklist perilaku belajar</td>
+    <td>Keterlibatan aktif, kualitas pertanyaan, kontribusi dalam diskusi kelompok, kemampuan mendengar pendapat orang lain</td>
+    <td>Selama kegiatan inti berlangsung</td>
+  </tr>
+  <tr>
+    <td><b>Penilaian Produk</b></td>
+    <td>Rubrik holistik 4 level</td>
+    <td>Kualitas konten (akurasi, kedalaman, relevansi), kreativitas presentasi, kelengkapan argumen berbasis bukti</td>
+    <td>Akhir kegiatan inti (presentasi kelompok)</td>
+  </tr>
+  <tr>
+    <td><b>Penilaian Kinerja</b></td>
+    <td>Rubrik analitik dengan indikator spesifik</td>
+    <td>Proses berpikir, langkah-langkah pemecahan masalah, kemampuan berargumentasi, keterampilan kolaborasi</td>
+    <td>Saat diskusi dan presentasi</td>
+  </tr>
+  <tr>
+    <td><b>Kartu Metakognisi</b></td>
+    <td>Jurnal refleksi 3-2-1</td>
+    <td>Kesadaran diri terhadap proses belajar, identifikasi kekuatan dan kelemahan pemahaman</td>
+    <td>Akhir pembelajaran</td>
+  </tr>
+</table>
+
+<h3>F.3 Rubrik Penilaian Formatif</h3>
+<table>
+  <tr class="sub-header"><td>Aspek</td><td>Sangat Baik (4)</td><td>Baik (3)</td><td>Cukup (2)</td><td>Perlu Bimbingan (1)</td></tr>
+  <tr>
+    <td><b>Pemahaman Konsep</b></td>
+    <td>Memahami konsep secara mendalam, mampu menjelaskan dengan contoh orisinal dan hubungan antar konsep</td>
+    <td>Memahami konsep dengan baik, mampu menjelaskan dengan contoh yang tepat</td>
+    <td>Memahami konsep secara parsial, penjelasan masih bergantung pada contoh yang diberikan guru</td>
+    <td>Pemahaman konsep masih sangat terbatas, perlu penjelasan ulang secara mendasar</td>
+  </tr>
+  <tr>
+    <td><b>Kolaborasi</b></td>
+    <td>Berkontribusi aktif, mendengarkan dengan empati, dan mendorong partisipasi anggota lain secara konsisten</td>
+    <td>Berkontribusi aktif dan mendengarkan pendapat orang lain dengan baik</td>
+    <td>Berkontribusi namun kurang konsisten; kadang mendominasi atau pasif</td>
+    <td>Partisipasi sangat minimal atau mengganggu dinamika kelompok</td>
+  </tr>
+  <tr>
+    <td><b>Komunikasi</b></td>
+    <td>Menyampaikan ide dengan sangat jelas, sistematis, percaya diri, dan menggunakan bahasa akademik yang tepat</td>
+    <td>Menyampaikan ide dengan jelas dan cukup sistematis</td>
+    <td>Menyampaikan ide namun kurang sistematis atau ragu-ragu</td>
+    <td>Kesulitan mengungkapkan ide secara verbal maupun tulisan</td>
+  </tr>
+</table>
+
+<h3>F.4 Asesmen Sumatif — Pilihan Ganda</h3>
+<table>
+  <tr class="sub-header"><td colspan="2">10 Soal Pilihan Ganda (Skor: masing-masing 1 poin)</td></tr>
+  <tr><td width="5%"><b>1.</b></td><td>Konsep dasar dari "${d.topik}" dalam konteks ${d.mapel} adalah...<br/>A. Definisi sempit yang hanya berlaku dalam situasi terbatas<br/>B. Kerangka konseptual yang menjelaskan fenomena secara komprehensif dan sistematis<br/>C. Prosedur teknis yang digunakan secara eksklusif oleh para ahli di bidangnya<br/>D. Teori abstrak yang tidak memiliki aplikasi dalam kehidupan nyata</td></tr>
+  <tr><td><b>2.</b></td><td>Hubungan antara "${d.topik}" dengan kehidupan sehari-hari peserta didik yang paling tepat adalah...<br/>A. Tidak ada hubungan yang relevan antara keduanya<br/>B. Hanya relevan dalam konteks akademis formal dan ujian<br/>C. Dapat diterapkan untuk memahami dan menyelesaikan permasalahan nyata di sekitar kita<br/>D. Relevan hanya bagi yang akan berkarir di bidang terkait</td></tr>
+  <tr><td><b>3.</b></td><td>Prinsip utama yang mendasari pemahaman tentang "${d.topik}" adalah...<br/>A. Prinsip hafalan dan reproduksi informasi secara verbatim<br/>B. Prinsip koneksi antar konsep, penerapan kontekstual, dan transfer pengetahuan<br/>C. Prinsip kompetisi individual tanpa kolaborasi<br/>D. Prinsip penerimaan pasif informasi dari sumber otoritas</td></tr>
+  <tr><td><b>4.</b></td><td>Pendekatan yang paling efektif untuk mempelajari "${d.topik}" secara mendalam adalah...<br/>A. Membaca berulang-ulang tanpa refleksi atau penerapan<br/>B. Menghafal rumus dan prosedur tanpa memahami konsep dasarnya<br/>C. Mengaitkan konsep baru dengan pengetahuan yang sudah ada melalui eksplorasi aktif<br/>D. Menunggu penjelasan lengkap dari guru sebelum mencoba memahami sendiri</td></tr>
+  <tr><td><b>5.</b></td><td>Penerapan "${d.topik}" dalam konteks pemecahan masalah nyata menuntut kemampuan...<br/>A. Mengingat prosedur standar dengan tepat<br/>B. Menganalisis situasi, mengidentifikasi variabel relevan, dan merancang solusi adaptif<br/>C. Mengikuti instruksi secara mekanis tanpa modifikasi<br/>D. Meniru contoh yang sudah ada tanpa adaptasi terhadap konteks spesifik</td></tr>
+  <tr><td><b>6.</b></td><td>Evaluasi kritis terhadap "${d.topik}" memerlukan kemampuan untuk...<br/>A. Menerima semua informasi tanpa mempertanyakannya<br/>B. Membandingkan berbagai perspektif dan menilai validitas argumen berdasarkan bukti<br/>C. Memilih perspektif yang paling populer atau disukai<br/>D. Mengikuti pendapat ahli tanpa mempertanyakan dasarnya</td></tr>
+  <tr><td><b>7.</b></td><td>Implikasi pemahaman mendalam tentang "${d.topik}" terhadap pengambilan keputusan adalah...<br/>A. Tidak berpengaruh terhadap kualitas keputusan<br/>B. Hanya relevan untuk keputusan akademis<br/>C. Memungkinkan pengambilan keputusan yang lebih berbasis bukti, sistematis, dan bertanggung jawab<br/>D. Membuat pengambilan keputusan menjadi lebih lambat dan tidak efisien</td></tr>
+  <tr><td><b>8.</b></td><td>Diferensiasi utama antara pemahaman permukaan dan pemahaman mendalam tentang "${d.topik}" terletak pada...<br/>A. Jumlah informasi yang dihafalkan<br/>B. Kecepatan menjawab pertanyaan faktual<br/>C. Kemampuan menghubungkan, mentransfer, dan mengaplikasikan konsep dalam berbagai konteks baru<br/>D. Nilai yang diperoleh dalam ujian pilihan ganda standar</td></tr>
+  <tr><td><b>9.</b></td><td>Kolaborasi dalam mempelajari "${d.topik}" memberikan manfaat utama berupa...<br/>A. Distribusi beban kerja yang merata tanpa sinergi pemikiran<br/>B. Paparan terhadap perspektif beragam yang memperkaya dan mendalamkan pemahaman<br/>C. Kesempatan untuk menyalin pekerjaan orang lain<br/>D. Mengurangi tanggung jawab individual</td></tr>
+  <tr><td><b>10.</b></td><td>Refleksi metakognitif setelah mempelajari "${d.topik}" paling tepat difasilitasi dengan...<br/>A. Mengulang catatan yang sama tanpa menganalisis pemahaman<br/>B. Mengerjakan latihan soal secara mekanis tanpa evaluasi mandiri<br/>C. Mengidentifikasi apa yang dipahami, apa yang masih ambigu, dan bagaimana memperbaiki pemahaman<br/>D. Meminta guru mengevaluasi pemahaman secara eksklusif</td></tr>
+</table>
+
+<h3>F.5 Asesmen Sumatif — Soal Esai</h3>
+<table>
+  <tr class="sub-header"><td>No.</td><td>Soal Esai</td><td>Indikator Jawaban</td><td>Skor</td></tr>
+  <tr>
+    <td><b>1.</b></td>
+    <td>Jelaskan konsep "${d.topik}" dengan menggunakan bahasa Anda sendiri, kemudian berikan minimal dua contoh penerapannya dalam kehidupan nyata! (C2-C3)</td>
+    <td>Definisi tepat dan orisinal; dua contoh relevan dan spesifik; kaitan konsep-contoh dijelaskan dengan logis</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td><b>2.</b></td>
+    <td>Analisislah bagaimana pemahaman tentang "${d.topik}" dapat membantu Anda menyelesaikan permasalahan nyata yang Anda hadapi dalam kehidupan sehari-hari! (C4)</td>
+    <td>Identifikasi masalah nyata yang relevan; penerapan konsep yang tepat; solusi yang logis dan dapat dilaksanakan</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td><b>3.</b></td>
+    <td>Evaluasilah minimal dua perspektif berbeda terkait "${d.topik}" dan kemukakan pendapat Anda yang didukung oleh argumen yang kuat! (C5)</td>
+    <td>Dua perspektif diidentifikasi dengan tepat; perbandingan yang adil dan berimbang; pendapat didukung argumen logis</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td><b>4.</b></td>
+    <td>Rancanglah sebuah solusi kreatif untuk masalah kontekstual yang berkaitan dengan "${d.topik}"! Jelaskan langkah-langkah rancangan Anda secara sistematis! (C6)</td>
+    <td>Masalah teridentifikasi dengan jelas; solusi inovatif dan dapat diimplementasikan; langkah sistematis dan logis</td>
+    <td>20</td>
+  </tr>
+  <tr>
+    <td><b>5.</b></td>
+    <td>Refleksikan perjalanan belajar Anda tentang "${d.topik}": apa yang paling berkesan, apa tantangan terbesar, dan bagaimana Anda akan terus mengembangkan pemahaman ini ke depannya? (Metakognitif)</td>
+    <td>Refleksi tulus dan mendalam; identifikasi tantangan yang spesifik; rencana pengembangan diri yang konkret</td>
+    <td>20</td>
+  </tr>
+</table>
+
+<!-- ======================================== REMEDIAL & PENGAYAAN -->
+<h2>G. REMEDIAL DAN PENGAYAAN</h2>
+<table>
+  <tr class="sub-header"><td colspan="2">Program Tindak Lanjut Pembelajaran</td></tr>
+  <tr>
+    <td width="30%"><b>🔵 Remedial</b><br/><i>(Bagi yang belum mencapai KKTP)</i></td>
+    <td>
+      <b>Identifikasi:</b> Guru menganalisis pola kesalahan berdasarkan hasil asesmen untuk menentukan miskonsepsi spesifik yang perlu diatasi.<br/>
+      <b>Strategi:</b>
+      <ul>
+        <li>Pembelajaran ulang dengan pendekatan berbeda: menggunakan analogi, visualisasi, atau manipulatif konkret</li>
+        <li>Tutoring sebaya (peer tutoring) dengan panduan struktur yang jelas dari guru</li>
+        <li>Pengerjaan soal remedial yang lebih sederhana namun kontekstual, dikerjakan secara bertahap</li>
+        <li>Bimbingan individual atau kelompok kecil (maks. 5 orang) di luar jam pelajaran</li>
+        <li>Penggunaan video pembelajaran (YouTube Edu) yang dapat diulang sesuai kebutuhan</li>
+      </ul>
+      <b>Target:</b> Peserta didik mencapai KKTP dalam waktu maks. 2 minggu setelah asesmen sumatif.
+    </td>
+  </tr>
+  <tr>
+    <td><b>🟡 Pengayaan</b><br/><i>(Bagi yang sudah melampaui KKTP)</i></td>
+    <td>
+      <b>Prinsip:</b> Pengayaan bukan percepatan materi berikutnya, melainkan pendalaman dan perluasan pada topik yang sama.
+      <ul>
+        <li><b>Proyek Mandiri:</b> Merancang dan melaksanakan mini-proyek riset tentang aplikasi "${d.topik}" dalam bidang yang diminati</li>
+        <li><b>Analisis Kasus Kompleks:</b> Menganalisis studi kasus dunia nyata dengan tingkat kompleksitas yang lebih tinggi</li>
+        <li><b>Mentoring Sebaya:</b> Berperan sebagai mentor bagi teman yang memerlukan bantuan dalam kegiatan remedial</li>
+        <li><b>Produksi Konten:</b> Membuat artikel blog, video tutorial, atau infografis tentang "${d.topik}" untuk dipublikasikan</li>
+        <li><b>Koneksi Lintas Disiplin:</b> Mengeksplorasi hubungan "${d.topik}" dengan bidang ilmu lain (${lintas})</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<!-- ======================================== REFLEKSI -->
+<h2>H. REFLEKSI PESERTA DIDIK DAN GURU</h2>
+<table>
+  <tr class="sub-header"><td>Refleksi Peserta Didik</td><td>Refleksi Guru</td></tr>
+  <tr>
+    <td>
+      <ol>
+        <li>Apakah saya benar-benar memahami konsep "${d.topik}" hari ini? Apa buktinya?</li>
+        <li>Bagian mana yang paling menantang bagi saya dan mengapa?</li>
+        <li>Strategi belajar apa yang paling efektif bagi saya dalam mempelajari topik ini?</li>
+        <li>Bagaimana saya akan menerapkan pemahaman ini di luar kelas?</li>
+        <li>Apa yang ingin saya ketahui lebih lanjut tentang topik ini?</li>
+      </ol>
+    </td>
+    <td>
+      <ol>
+        <li>Sejauh mana tujuan pembelajaran berhasil dicapai oleh sebagian besar peserta didik?</li>
+        <li>Aktivitas mana yang paling efektif dalam membangun pemahaman mendalam?</li>
+        <li>Apa yang perlu diperbaiki atau dimodifikasi dalam perencanaan pembelajaran berikutnya?</li>
+        <li>Bagaimana saya dapat lebih baik mengakomodasi keberagaman kebutuhan peserta didik?</li>
+        <li>Aspek pedagogis apa yang perlu saya tingkatkan sebagai seorang profesional?</li>
+      </ol>
+    </td>
+  </tr>
+</table>
+
+<!-- ======================================== DIFERENSIASI -->
+<h2>I. STRATEGI DIFERENSIASI PEMBELAJARAN</h2>
+<table>
+  <tr class="sub-header"><td>Aspek</td><td>🔴 Peserta Didik Kesulitan Belajar</td><td>🟡 Peserta Didik Reguler</td><td>🟢 Peserta Didik Pencapaian Tinggi</td></tr>
+  <tr>
+    <td><b>Konten</b></td>
+    <td>Materi disederhanakan dengan scaffolding berlapis; menggunakan visual, gambar, dan analogi konkret; fokus pada konsep inti yang paling esensial</td>
+    <td>Materi standar sesuai capaian pembelajaran; menggunakan berbagai representasi (teks, visual, kinestetik)</td>
+    <td>Materi diperkaya dengan sumber primer, studi kasus kompleks, dan koneksi antar disiplin yang menantang</td>
+  </tr>
+  <tr>
+    <td><b>Proses</b></td>
+    <td>Scaffolding intensif; bimbingan guru lebih sering; waktu pengerjaan lebih fleksibel; pertanyaan dengan kompleksitas lebih rendah</td>
+    <td>Scaffolding moderat; bimbingan terjadwal; eksplorasi mandiri dan kolaboratif yang seimbang</td>
+    <td>Scaffolding minimal; eksplorasi mandiri lebih dominan; pertanyaan open-ended dengan tingkat abstraksi tinggi</td>
+  </tr>
+  <tr>
+    <td><b>Produk</b></td>
+    <td>Pilihan produk: membuat poster sederhana, mengisi LKPD terstruktur, atau merekam video penjelasan singkat dengan panduan</td>
+    <td>Pilihan produk: membuat presentasi, menulis laporan, atau membuat infografis tentang "${d.topik}"</td>
+    <td>Pilihan produk: merancang solusi inovatif, menulis esai analitis, atau membuat proposal mini-riset yang kompleks</td>
+  </tr>
+</table>
+
+<!-- ======================================== LAMPIRAN -->
+<h2>J. LAMPIRAN</h2>
+
+<h3>Lampiran 1: Rubrik Penilaian Lengkap dengan Skor</h3>
+<table>
+  <tr class="sub-header"><td>Kriteria</td><td>Bobot</td><td>4 (Sangat Baik)</td><td>3 (Baik)</td><td>2 (Cukup)</td><td>1 (Perlu Bimbingan)</td><td>Skor</td></tr>
+  <tr><td>Pemahaman Konsep</td><td>30%</td><td>Mendalam, orisinal, mampu mentransfer ke konteks baru</td><td>Tepat, dapat menjelaskan dengan kata sendiri</td><td>Parsial, masih bergantung pada contoh guru</td><td>Sangat terbatas, banyak miskonsepsi</td><td>__/4</td></tr>
+  <tr><td>Penalaran Kritis</td><td>25%</td><td>Analisis mendalam, evaluasi berbagai sudut pandang, argumentasi berbasis bukti kuat</td><td>Analisis memadai, argumentasi cukup jelas</td><td>Analisis permukaan, argumentasi lemah</td><td>Tidak menunjukkan kemampuan analisis</td><td>__/4</td></tr>
+  <tr><td>Kreativitas &amp; Inovasi</td><td>20%</td><td>Sangat orisinal, solusi inovatif, mengejutkan dan inspiratif</td><td>Cukup kreatif, ada usaha orisinalitas</td><td>Kurang kreatif, banyak meniru contoh</td><td>Tidak menunjukkan kreativitas</td><td>__/4</td></tr>
+  <tr><td>Kolaborasi &amp; Komunikasi</td><td>15%</td><td>Kontribusi aktif, komunikasi efektif, mendorong orang lain</td><td>Kontribusi baik, komunikasi jelas</td><td>Kontribusi kurang konsisten</td><td>Pasif atau mengganggu kelompok</td><td>__/4</td></tr>
+  <tr><td>Refleksi &amp; Metakognisi</td><td>10%</td><td>Refleksi mendalam, rencana konkret, kesadaran diri tinggi</td><td>Refleksi memadai, cukup spesifik</td><td>Refleksi superfisial</td><td>Tidak ada refleksi bermakna</td><td>__/4</td></tr>
+  <tr><td colspan="5" style="text-align:right;"><b>Total Skor (maks. 20)</b></td><td colspan="2"><b>__/20</b></td></tr>
+</table>
+
+<h3>Lampiran 2: Ringkasan Materi "${d.topik}"</h3>
+<table>
+  <tr class="sub-header"><td>Ringkasan Materi Pokok</td></tr>
+  <tr><td>
+    <b>A. Konsep Dasar</b><br/>
+    "${d.topik}" merupakan salah satu topik fundamental dalam ${d.mapel} yang memiliki relevansi luas dalam kehidupan nyata. Pemahaman mendalam tentang topik ini menjadi fondasi penting bagi pengembangan kompetensi yang lebih lanjut.<br/><br/>
+    <b>B. Komponen Utama</b><br/>
+    <ul>
+      <li>Aspek faktual: fakta-fakta empiris dan data yang berkaitan dengan "${d.topik}"</li>
+      <li>Aspek konseptual: kerangka teori dan prinsip yang menjelaskan "${d.topik}"</li>
+      <li>Aspek prosedural: langkah dan teknik penerapan "${d.topik}"</li>
+    </ul>
+    <b>C. Hubungan Antar Konsep</b><br/>
+    Pemahaman "${d.topik}" sangat terkait dengan konsep-konsep dalam ${lintas}, sehingga pendekatan lintas disiplin sangat dianjurkan dalam proses pembelajaran.<br/><br/>
+    <b>D. Aplikasi Nyata</b><br/>
+    Konsep-konsep dalam "${d.topik}" dapat diterapkan untuk memecahkan berbagai permasalahan kontekstual, membuat keputusan berbasis data, dan merancang solusi inovatif yang berdampak positif bagi lingkungan sekitar.
+  </td></tr>
+</table>
+
+<h3>Lampiran 3: LKPD (Lembar Kerja Peserta Didik)</h3>
+<table>
+  <tr class="sub-header"><td>LEMBAR KERJA PESERTA DIDIK (LKPD)</td></tr>
+  <tr><td>
+    <b>Judul:</b> Eksplorasi Mendalam "${d.topik}"<br/>
+    <b>Mata Pelajaran:</b> ${d.mapel} &nbsp;|&nbsp; <b>Kelas:</b> ${d.kelas} &nbsp;|&nbsp; <b>Tanggal:</b> _______________<br/>
+    <b>Nama:</b> _____________________________ &nbsp;|&nbsp; <b>Kelompok:</b> _____________<br/><br/>
+    <b>🎯 Tujuan:</b> Melalui LKPD ini, peserta didik diharapkan mampu memahami, menganalisis, dan menerapkan konsep "${d.topik}" dalam konteks yang bermakna.<br/><br/>
+    <b>📋 Petunjuk Pengerjaan:</b>
+    <ul>
+      <li>Kerjakan secara mandiri terlebih dahulu, kemudian diskusikan dalam kelompok</li>
+      <li>Tuliskan jawaban dengan jelas, lengkap, dan menggunakan bahasa Indonesia yang baik dan benar</li>
+      <li>Jika ada pertanyaan, tanyakan kepada guru dengan mengangkat tangan</li>
+      <li>Selesaikan dalam waktu yang telah ditentukan (±30 menit)</li>
+    </ul>
+    <hr/>
+    <b>BAGIAN A — Pilihan Ganda (Berilah tanda silang pada jawaban yang paling tepat)</b><br/><br/>
+    1. Pengertian paling tepat dari "${d.topik}" adalah...<br/>
+    &nbsp;&nbsp;&nbsp;A. Prosedur teknis yang bersifat mekanis<br/>
+    &nbsp;&nbsp;&nbsp;B. Kerangka pemahaman yang menjelaskan fenomena secara komprehensif<br/>
+    &nbsp;&nbsp;&nbsp;C. Hafalan definisi dari buku teks standar<br/>
+    &nbsp;&nbsp;&nbsp;D. Teori yang hanya berlaku dalam lingkungan akademis<br/><br/>
+    2. Penerapan "${d.topik}" dalam kehidupan nyata paling tepat ditunjukkan oleh...<br/>
+    &nbsp;&nbsp;&nbsp;A. Mengerjakan soal latihan di buku paket<br/>
+    &nbsp;&nbsp;&nbsp;B. Menghafal rumus dan prosedur standar<br/>
+    &nbsp;&nbsp;&nbsp;C. Menggunakan pemahaman konsep untuk memecahkan masalah kontekstual<br/>
+    &nbsp;&nbsp;&nbsp;D. Membaca ulang materi di buku teks<br/><br/>
+    3. Aspek terpenting dalam memahami "${d.topik}" secara mendalam adalah...<br/>
+    &nbsp;&nbsp;&nbsp;A. Kecepatan mengerjakan soal<br/>
+    &nbsp;&nbsp;&nbsp;B. Jumlah informasi yang dihafal<br/>
+    &nbsp;&nbsp;&nbsp;C. Kemampuan menghubungkan konsep dengan pengalaman nyata<br/>
+    &nbsp;&nbsp;&nbsp;D. Nilai tertinggi dalam ujian<br/><br/>
+    <hr/>
+    <b>BAGIAN B — Uraian (Jawablah dengan lengkap dan sistematis)</b><br/><br/>
+    1. Jelaskan konsep "${d.topik}" dengan kata-kata Anda sendiri! Berikan satu contoh konkret yang relevan dengan kehidupan Anda!<br/>
+    <div style="border:1px solid #9ca3af; min-height:80px; margin:8px 0; padding:6px; border-radius:4px;"></div>
+    2. Identifikasi satu masalah nyata yang berkaitan dengan "${d.topik}" di sekitar Anda, kemudian rumuskan solusinya secara sistematis!<br/>
+    <div style="border:1px solid #9ca3af; min-height:80px; margin:8px 0; padding:6px; border-radius:4px;"></div>
+    3. Bagaimana pengetahuan tentang "${d.topik}" dapat membantu Anda membuat keputusan yang lebih baik dalam kehidupan sehari-hari?<br/>
+    <div style="border:1px solid #9ca3af; min-height:80px; margin:8px 0; padding:6px; border-radius:4px;"></div>
+    <hr/>
+    <b>BAGIAN C — Refleksi Diri</b><br/><br/>
+    ✏️ Tuliskan tiga hal yang Anda pelajari, dua hal yang masih membingungkan, dan satu pertanyaan yang ingin Anda cari jawabannya:<br/>
+    <div style="border:1px solid #9ca3af; min-height:60px; margin:8px 0; padding:6px; border-radius:4px;"></div>
+  </td></tr>
+</table>
+
+<h3>Lampiran 4: 5 Soal HOTS Tambahan</h3>
+<table>
+  <tr class="sub-header"><td>Soal-Soal HOTS (Higher Order Thinking Skills)</td></tr>
+  <tr><td>
+    <b>1. (C4 — Analisis)</b><br/>
+    Bandingkan dan kontraskan dua pendekatan berbeda dalam memahami "${d.topik}"! Apa kelebihan dan kelemahan masing-masing pendekatan tersebut dalam konteks kehidupan nyata peserta didik?<br/><br/>
+    <b>2. (C5 — Evaluasi)</b><br/>
+    Evaluasilah apakah cara Anda mempelajari "${d.topik}" selama ini sudah efektif! Gunakan kriteria: kedalaman pemahaman, transferabilitas ke konteks baru, dan kemampuan menjelaskan kepada orang lain. Apa rekomendasinya?<br/><br/>
+    <b>3. (C6 — Kreasi)</b><br/>
+    Rancanglah sebuah proyek mini yang mengintegrasikan "${d.topik}" dengan minimal satu bidang ilmu lain (${lintas})! Jelaskan tujuan, metodologi, hasil yang diharapkan, dan dampaknya!<br/><br/>
+    <b>4. (Lintas Disiplin)</b><br/>
+    Bagaimana konsep "${d.topik}" dalam ${d.mapel} terhubung dengan isu-isu global kontemporer (seperti perubahan iklim, ketimpangan sosial, atau revolusi teknologi)? Berikan analisis mendalam dengan bukti yang konkret!<br/><br/>
+    <b>5. (Metakognitif — Transfer)</b><br/>
+    Jika Anda diminta mengajarkan "${d.topik}" kepada adik kelas yang belum pernah mempelajarinya, bagaimana Anda akan merancang urutan penjelasan yang paling efektif? Apa analogi, contoh, atau strategi yang akan Anda gunakan? Mengapa?
+  </td></tr>
+</table>
+
+<h3>Lampiran 5: Daftar Pustaka</h3>
+<table>
+  <tr class="sub-header"><td>Referensi dan Sumber Belajar</td></tr>
+  <tr><td>
+    <b>Sumber Resmi Pemerintah:</b><br/>
+    1. Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP). (2022). <i>Capaian Pembelajaran ${d.mapel} Fase ${d.fase.split(' ')[1] || 'D'}. </i> Jakarta: Kemendikbudristek.<br/>
+    2. Kemendikbudristek. (2022). <i>Panduan Pembelajaran dan Asesmen Kurikulum Merdeka.</i> Jakarta: Pusdatin Kemendikbudristek.<br/>
+    3. Kemendikbudristek. (2023). <i>Panduan Rencana Pembelajaran Mendalam (RPM).</i> Jakarta: Kemendikbudristek.<br/><br/>
+    <b>Buku Teks dan Referensi Akademis:</b><br/>
+    4. Wiggins, G., &amp; McTighe, J. (2011). <i>The Understanding by Design Guide to Creating High-Quality Units.</i> ASCD: Alexandria, VA.<br/>
+    5. Fullan, M., Quinn, J., &amp; McEachen, J. (2018). <i>Deep Learning: Engage the World Change the World.</i> Corwin Press: California.<br/>
+    6. Tomlinson, C. A. (2014). <i>The Differentiated Classroom: Responding to the Needs of All Learners (2nd ed.).</i> ASCD: Alexandria, VA.<br/><br/>
+    <b>Sumber Digital:</b><br/>
+    7. Platform Merdeka Mengajar. (2024). Perangkat ajar dan modul ajar ${d.mapel}. Tersedia di: https://guru.kemdikbud.go.id<br/>
+    8. YouTube Edu Indonesia. (2024). Video pembelajaran ${d.mapel} ${d.kelas}. Tersedia di: https://www.youtube.com/edu<br/>
+    9. Quizizz Inc. (2024). Platform kuis pembelajaran interaktif. Tersedia di: https://quizizz.com<br/>
+    10. Canva for Education. (2024). Platform desain visual untuk pendidikan. Tersedia di: https://www.canva.com/education
+  </td></tr>
+</table>
+
+<!-- ======================================== FOOTER TANDA TANGAN -->
+<div style="margin-top:2.5rem;">
+  <table>
+    <tr>
+      <td style="width:50%; text-align:center; padding:1rem;">
+        <p style="margin:0 0 .5rem;">${d.nama_sekolah.includes('Negeri') ? d.nama_sekolah.split(',')[0] : 'Mengetahui,'}<br/><b>Kepala Sekolah</b></p>
+        <div style="height:70px;"></div>
+        <p style="margin:0; border-top:1.5px solid #374151; padding-top:.4rem; display:inline-block; min-width:200px;">
+          <b>${d.nama_kepsek}</b><br/>
+          <span style="font-size:10pt;">NIP. ${d.nip_kepsek}</span>
+        </p>
+      </td>
+      <td style="width:50%; text-align:center; padding:1rem;">
+        <p style="margin:0 0 .5rem;">___________,  ${tgl}<br/><b>Guru Mata Pelajaran</b></p>
+        <div style="height:70px;"></div>
+        <p style="margin:0; border-top:1.5px solid #374151; padding-top:.4rem; display:inline-block; min-width:200px;">
+          <b>${d.nama_guru}</b><br/>
+          <span style="font-size:10pt;">NIP. ${d.nip_guru || '…………………………'}</span>
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
+    `;
+  }
+};
+
+// ============================================================
+// MODULE: exportHandler
+// ============================================================
+const exportHandler = {
+  getOutputHTML() {
+    const content = generatorRPM._lastHTML || '';
+    const d = formHandler.getData();
+    return `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta charset='utf-8'/>
+  <style>
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; margin: 2cm; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
+    td, th { border: 1pt solid #374151; padding: 5pt 8pt; vertical-align: top; text-align: justify; }
+    th { background: #1d4ed8; color: white; text-align: center; font-weight: bold; }
+    h1 { font-size: 14pt; font-weight: bold; text-align: center; color: #1d4ed8; }
+    h2 { font-size: 12pt; font-weight: bold; color: #1d4ed8; border-bottom: 1pt solid #1d4ed8; padding-bottom: 3pt; margin-top: 12pt; }
+    h3 { font-size: 11pt; font-weight: bold; margin-top: 8pt; }
+    ul { margin: 4pt 0; padding-left: 18pt; }
+    li { margin-bottom: 2pt; }
+    .sub-header td { background: #dbeafe; font-weight: bold; text-align: center; }
+  </style>
+</head>
+<body>${content}</body>
+</html>`;
+  },
+
+  exportWord() {
+    const html = this.getOutputHTML();
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const d = formHandler.getData();
+    link.href = url;
+    link.download = `RPM_${d.mapel.replace(/\s+/g,'_')}_${d.kelas.replace(/\s+/g,'_')}_${d.tahun_pelajaran.replace('/','_')}.doc`;
+    link.click();
+    URL.revokeObjectURL(url);
+    formHandler.toast('✅ File Word berhasil didownload!');
+  },
+
+  async copyAndOpenDocs() {
+    const frame = document.getElementById('rpm-frame');
+    const content = (frame.contentDocument && frame.contentDocument.body)
+      ? frame.contentDocument.body.innerText
+      : (generatorRPM._lastHTML || '');
+    try {
+      await navigator.clipboard.writeText(content);
+      formHandler.toast('✅ RPM berhasil disalin! Membuka Google Docs...');
+      setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 800);
+    } catch(e) {
+      // Fallback
+      const el = document.createElement('textarea');
+      el.value = content;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      formHandler.toast('✅ RPM disalin! Membuka Google Docs...');
+      setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 800);
+    }
+  }
+};
+</script>
+
+</body>
+</html>
